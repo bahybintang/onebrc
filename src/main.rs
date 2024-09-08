@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fs::read_to_string;
+use std::io::{BufRead, BufReader};
 
 struct City {
     min: f32,
@@ -8,22 +8,19 @@ struct City {
     cnt: f32,
 }
 
-fn read_lines(filename: &str) -> Vec<String> {
-    let mut lines: Vec<String> = Vec::new();
-
-    let contents = read_to_string(filename).expect("Something went wrong reading the file");
-    for line in contents.lines() {
-        lines.push(line.to_string());
-    }
-
-    lines
+fn read_lines(file_path: &str) -> std::io::Result<std::io::BufReader<std::fs::File>> {
+    let file = std::fs::File::open(file_path)?;
+    Ok(BufReader::new(file))
 }
 
 fn main() {
-    let lines = read_lines("data/measurements.txt");
     let mut h_map: HashMap<String, City> = HashMap::new();
+    let mut counter = 0;
 
-    for line in lines {
+    for line in read_lines("data/measurements.txt").unwrap().lines() {
+        counter += 1;
+
+        let line = line.unwrap();
         let parts = line.split(';').collect::<Vec<&str>>();
         let city_name = parts[0];
         let temp = parts[1].parse::<f32>().unwrap();
@@ -44,6 +41,10 @@ fn main() {
                 };
                 h_map.insert(city_name.to_string(), city);
             }
+        }
+
+        if counter % 1_000_000 == 0 {
+            println!("Processed {} lines", counter);
         }
     }
 
